@@ -70,8 +70,11 @@ export class FactExtractor {
             f.text.length >= 5 &&
             f.text.length <= 500 &&
             typeof f.importance === "number" &&
-            f.importance >= 0 &&
-            f.importance <= 1,
+            f.importance > 0 &&
+            f.importance <= 1 &&
+            // Skip "nothing to remember" type responses
+            !/no (important|notable|significant|durable)/i.test(f.text as string) &&
+            !/nothing (worth|to) remember/i.test(f.text as string),
         )
         .map((f: Record<string, unknown>) => ({
           text: f.text as string,
