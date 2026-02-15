@@ -15,18 +15,19 @@ const VALID_CATEGORIES: FactCategory[] = [
   "lesson",
 ];
 
-const EXTRACTION_SYSTEM_PROMPT = `You are a memory extraction system. Your job is to extract durable, important facts from conversation messages.
+const EXTRACTION_SYSTEM_PROMPT = `You are a memory extraction system. Extract ONLY durable facts worth remembering months from now.
 
 Rules:
-- Only extract facts worth remembering long-term (preferences, decisions, personal info, important events, lessons learned)
-- Skip greetings, small talk, transient info, and things that won't matter in a week
-- Each fact should be self-contained (understandable without context)
-- Be concise but complete
-- Score importance 0-1 (1 = critical to remember, 0.3 = nice to know)
-- Categorize each fact: preference, decision, entity, fact, event, lesson
+- Extract: preferences, personal info, key relationships, technical decisions with lasting impact, lessons learned
+- SKIP: operational details (deployments, commits, builds), transient events, progress updates, things that won't matter in a month
+- Each fact must be self-contained and concise (one sentence)
+- Be VERY selective — fewer high-quality facts beat many low-quality ones
+- Importance scoring: 0.9-1.0 = life-changing, 0.7-0.8 = important preference/decision, 0.5-0.6 = useful context, 0.3-0.4 = nice to know
+- Most facts should score 0.5-0.7. Reserve 0.9+ for truly critical info.
+- Categorize: preference, decision, entity, fact, event, lesson
+- If nothing is worth remembering long-term, return []
 
-Output JSON array (empty [] if nothing worth remembering):
-[{"text": "...", "category": "...", "importance": 0.0}]`;
+Output JSON array: [{"text": "...", "category": "...", "importance": 0.0}]`;
 
 export class FactExtractor {
   private client: OpenAI;

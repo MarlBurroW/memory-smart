@@ -193,7 +193,7 @@ const memorySmartPlugin = {
           const vector = await embeddings.embed(text);
 
           // Dedup check
-          const existing = await qdrant.search(vector, 1, 0.92);
+          const existing = await qdrant.search(vector, 1, 0.85);
           if (existing.length > 0) {
             return {
               content: [
@@ -386,7 +386,7 @@ const memorySmartPlugin = {
             const vector = await embeddings.embed(fact.text);
 
             // Dedup
-            const existing = await qdrant.search(vector, 1, 0.92);
+            const existing = await qdrant.search(vector, 1, 0.85);
             if (existing.length > 0) continue;
 
             const entry: MemoryFact = {
