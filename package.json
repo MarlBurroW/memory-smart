@@ -4,8 +4,17 @@
   "description": "OpenClaw memory plugin with LLM extraction, scoring, and Qdrant storage",
   "type": "module",
   "main": "index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
-    "openai": "^4.0.0",
-    "@sinclair/typebox": "^0.32.0"
+    "@sinclair/typebox": "^0.32.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
