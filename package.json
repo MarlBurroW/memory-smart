@@ -1,0 +1,11 @@
+{
+  "name": "memory-smart",
+  "version": "0.1.0",
+  "description": "OpenClaw memory plugin with LLM extraction, scoring, and Qdrant storage",
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {
+    "openai": "^4.0.0",
+    "@sinclair/typebox": "^0.32.0"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "id": "memory-smart",
+  "kind": "memory",
+  "name": "Memory (Smart)",
+  "description": "Intelligent long-term memory with LLM extraction, scoring/decay, and auto-recall/capture via Qdrant",
+  "uiHints": {
+    "qdrant.url": {
+      "label": "Qdrant URL",
+      "placeholder": "http://localhost:6333"
+    },
+    "qdrant.collection": {
+      "label": "Collection Name",
+      "placeholder": "memories"
+    },
+    "embedding.apiKey": {
+      "label": "OpenAI API Key (embeddings)",
+      "sensitive": true,
+      "placeholder": "sk-..."
+    },
+    "embedding.model": {
+      "label": "Embedding Model",
+      "placeholder": "text-embedding-3-small"
+    },
+    "extraction.apiKey": {
+      "label": "OpenAI API Key (extraction LLM)",
+      "sensitive": true,
+      "placeholder": "sk-..."
+    },
+    "extraction.model": {
+      "label": "Extraction Model",
+      "placeholder": "gpt-4.1-nano"
+    },
+    "autoCapture": {
+      "label": "Auto-Capture",
+      "help": "Automatically extract and store facts from conversations"
+    },
+    "autoRecall": {
+      "label": "Auto-Recall",
+      "help": "Automatically inject relevant memories at session start"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "qdrant": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": { "type": "string", "default": "http://localhost:6333" },
+          "collection": { "type": "string", "default": "memory-smart" },
+          "apiKey": { "type": "string" }
+        }
+      },
+      "embedding": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "apiKey": { "type": "string" },
+          "model": {
+            "type": "string",
+            "enum": ["text-embedding-3-small", "text-embedding-3-large"],
+            "default": "text-embedding-3-small"
+          }
+        },
+        "required": ["apiKey"]
+      },
+      "extraction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "apiKey": { "type": "string" },
+          "model": { "type": "string", "default": "gpt-4.1-nano" }
+        },
+        "required": ["apiKey"]
+      },
+      "autoCapture": { "type": "boolean", "default": true },
+      "autoRecall": { "type": "boolean", "default": true },
+      "recallLimit": { "type": "number", "default": 5, "minimum": 1, "maximum": 20 },
+      "captureMaxPerTurn": { "type": "number", "default": 5, "minimum": 1, "maximum": 10 },
+      "decayDays": { "type": "number", "default": 365, "minimum": 30 }
+    },
+    "required": ["embedding", "extraction"]
+  }
+}
