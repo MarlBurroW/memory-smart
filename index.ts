@@ -320,12 +320,28 @@ const memorySmartPlugin = {
 
           if (scored.length === 0) return;
 
-          // Bump access counts (fire and forget)
+          // Bump access counts + auto-adjust importance (fire and forget)
           for (const s of scored) {
-            qdrant.updatePayload(s.fact.id, {
-              accessCount: s.fact.accessCount + 1,
+            const newAccessCount = s.fact.accessCount + 1;
+            const updates: Record<string, unknown> = {
+              accessCount: newAccessCount,
               lastAccessed: Date.now(),
-            }).catch(() => {});
+            };
+
+            // Auto-adjust importance: boost if frequently accessed
+            // After 10 recalls, boost +0.05 every 5 recalls (10, 15, 20, ...)
+            if (newAccessCount >= 10 && newAccessCount % 5 === 0) {
+              const newImportance = Math.min(1.0, s.fact.importance + 0.05);
+              if (newImportance > s.fact.importance) {
+                updates.importance = newImportance;
+                api.logger.info?.(
+                  `memory-smart: boosted importance for "${s.fact.text.slice(0, 50)}" ` +
+                  `(${s.fact.importance.toFixed(2)} → ${newImportance.toFixed(2)}, ${newAccessCount} accesses)`
+                );
+              }
+            }
+
+            qdrant.updatePayload(s.fact.id, updates).catch(() => {});
           }
 
           api.logger.info?.(`memory-smart: injecting ${scored.length} memories (top score: ${Math.round(scored[0].finalScore * 100)}%)`);
