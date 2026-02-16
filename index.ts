@@ -192,14 +192,21 @@ const memorySmartPlugin = {
 
           const vector = await embeddings.embed(text);
 
-          // Dedup check
-          const existing = await qdrant.search(vector, 1, 0.85);
+          // Dedup check — merge if similar exists
+          const existing = await qdrant.search(vector, 1, 0.92);
           if (existing.length > 0) {
+            const ex = existing[0].fact;
+            const newImportance = Math.min(1, Math.max(ex.importance, importance));
+            await qdrant.updatePayload(ex.id, {
+              importance: newImportance,
+              accessCount: ex.accessCount + 1,
+              lastAccessed: Date.now(),
+            }).catch(() => {});
             return {
               content: [
-                { type: "text", text: `Similar memory already exists: "${existing[0].fact.text}"` },
+                { type: "text", text: `Merged with existing memory: "${ex.text}" (importance: ${newImportance})` },
               ],
-              details: { action: "duplicate", existingId: existing[0].fact.id },
+              details: { action: "merged", existingId: ex.id, newImportance },
             };
           }
 
@@ -209,7 +216,7 @@ const memorySmartPlugin = {
             category: category as MemoryFact["category"],
             importance: Math.min(1, Math.max(0, importance)),
             sessionKey: "manual",
-            agentId: "unknown",
+            agentId: "manual",
             createdAt: Date.now(),
             accessCount: 0,
             lastAccessed: 0,
@@ -385,17 +392,27 @@ const memorySmartPlugin = {
           for (const fact of facts.slice(0, cfg.captureMaxPerTurn)) {
             const vector = await embeddings.embed(fact.text);
 
-            // Dedup
-            const existing = await qdrant.search(vector, 1, 0.85);
-            if (existing.length > 0) continue;
+            // Dedup merge: if similar exists, boost it instead of creating duplicate
+            const existing = await qdrant.search(vector, 1, 0.92);
+            if (existing.length > 0) {
+              const ex = existing[0].fact;
+              await qdrant.updatePayload(ex.id, {
+                importance: Math.min(1, Math.max(ex.importance, fact.importance)),
+                accessCount: ex.accessCount + 1,
+                lastAccessed: Date.now(),
+              }).catch(() => {});
+              continue;
+            }
 
+            // Extract session/agent info from event
+            const ev = event as Record<string, unknown>;
             const entry: MemoryFact = {
               id: randomUUID(),
               text: fact.text,
               category: fact.category,
               importance: fact.importance,
-              sessionKey: "auto",
-              agentId: "unknown",
+              sessionKey: (ev.sessionKey as string) || (ev.session as string) || "auto",
+              agentId: (ev.agentId as string) || (ev.agent as string) || "unknown",
               createdAt: Date.now(),
               accessCount: 0,
               lastAccessed: 0,
